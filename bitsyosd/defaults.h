@@ -17,8 +17,8 @@
 #ifndef _DEFAULTS_
 #define _DEFAULTS_
 
-#include "const.h";
-#include "config.h";
+#include "const.h"
+#include "config.h"
 
 /**
  * (GPS)

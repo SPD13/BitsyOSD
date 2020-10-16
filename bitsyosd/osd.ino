@@ -374,5 +374,3 @@ void DrawCoordinates(byte x, byte y, float value, byte prec, byte symbol) {
 int vma(byte v, byte a) {
   return VIDEO_MODE == 0 ? v + a : v; 
 }  
-
-

@@ -13,7 +13,7 @@ tweak to your likening.
 #ifndef _CONF_
 #define _CONF_
 
-#include "const.h";
+#include "const.h"
 
 
 /** 

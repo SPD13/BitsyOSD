@@ -25,7 +25,7 @@ var // the font file to be uploaded
   * Objects
   */
 
-var SerialPort = require("serialport"),
+const SerialPort = require("serialport"),
     fs = require('fs'),
     Prompt = require('readline-sync'),
     ProgressBar = require('progress'),
@@ -43,7 +43,7 @@ var run = function() {
       console.log('No valid COM Port selected.');
     } else {
       // initialize port
-      var serialPort = new SerialPort(SERIAL_DEVICE, {baudrate: SERIAL_BAUD});
+      var serialPort = new SerialPort(SERIAL_DEVICE, {baudRate: SERIAL_BAUD});
       // open serial port
       serialPort.on("open", function () {
 
@@ -112,7 +112,7 @@ var run = function() {
 
 if (!SERIAL_DEVICE) {
   // display ports
-  SerialPort.list(function (err, ports) {
+  SerialPort.list().then(ports => {
     // show ports
     ports.forEach(function(port, index) {
       console.log(index + ' - ' + port.comName);
