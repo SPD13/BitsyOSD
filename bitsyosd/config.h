@@ -23,8 +23,14 @@ tweak to your likening.
   * 1 = NTSC
   */
   
-#define VIDEO_MODE 0
+#define VIDEO_MODE 1
 
+/**
+  * (Enable car Mode): No altitude
+  * 
+  *
+  */
+#define CAR_MODE
 
 /**
   * (Units) 
@@ -33,12 +39,18 @@ tweak to your likening.
   */
 
 
-#define UNIT_SPEED UNIT_SPEED_MPH
-#define UNIT_ALTITUDE UNIT_LENGTH_FT
-#define UNIT_LENGTH UNIT_LENGTH_FT
-#define UNIT_DISTANCE UNIT_LENGTH_FT
-#define UNIT_DISTANCE_LARGE UNIT_LENGTH_MI
+//#define UNIT_SPEED UNIT_SPEED_MPH
+//#define UNIT_ALTITUDE UNIT_LENGTH_FT
+//#define UNIT_LENGTH UNIT_LENGTH_FT
+//#define UNIT_DISTANCE UNIT_LENGTH_FT
+//#define UNIT_DISTANCE_LARGE UNIT_LENGTH_MI
 
+//Metric!!!
+#define UNIT_SPEED UNIT_SPEED_KMH
+#define UNIT_ALTITUDE UNIT_LENGTH_M
+#define UNIT_LENGTH UNIT_LENGTH_M
+#define UNIT_DISTANCE UNIT_LENGTH_M
+#define UNIT_DISTANCE_LARGE UNIT_LENGTH_KM
 
 /**
   * (Showlabels)
@@ -61,7 +73,7 @@ tweak to your likening.
   *
   */
 
-//#define GPS_ENABLED
+#define GPS_ENABLED
 
 /**
   * (GPS Parser)
@@ -73,7 +85,7 @@ tweak to your likening.
   */
 
 
-//#define GPS_PARSER_NEMA
+#define GPS_PARSER_NEMA
 //#define GPS_PARSER_DJI
 //#define GPS_PARSER_UBLOX  // Binary UBLOX Protocol - not implemented yet
 //#define GPS_PARSER_SIM
@@ -157,7 +169,7 @@ tweak to your likening.
   * 
   */
 
-#define GPS_COORDINATES_SHOW
+//#define GPS_COORDINATES_SHOW
 
 
 /**
@@ -216,8 +228,8 @@ tweak to your likening.
   * 2 = Toggle (every 5s) ** NOT IMPLEMENTED YET **
   */
 
-#define DISPLAY_MODE_BATTERY1 0
-#define DISPLAY_MODE_BATTERY2 0
+#define DISPLAY_MODE_BATTERY1 1
+#define DISPLAY_MODE_BATTERY2 1
 
 
 /**
@@ -233,7 +245,7 @@ tweak to your likening.
   */
 
 #define VOLTAGE_DIVIDER_BATTERY1 10.75
-#define VOLTAGE_DIVIDER_BATTERY2 10
+#define VOLTAGE_DIVIDER_BATTERY2 10.75
 
 
 /**
@@ -247,7 +259,7 @@ tweak to your likening.
   * 4s = 3  - Maximum supported by the Hardware
   */
 
-#define TYPE_BATTERY1 1
+#define TYPE_BATTERY1 0
 #define TYPE_BATTERY2 1
 
 

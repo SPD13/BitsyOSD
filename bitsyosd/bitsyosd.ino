@@ -387,10 +387,14 @@ void UpdateDisplay() {
           // draw boxes for display
           if(SHOW_LABELS) {
             DrawLabelBox(vma(LAYOUT_SPEED_X - 1, -1), vma(LAYOUT_SPEED_Y - 1, 1), 6, 3, 0x60, GetUnitSpeedSymbol(UNIT_SPEED, true));
-            DrawLabelBox(LAYOUT_ALT_X - 1, vma(LAYOUT_ALT_Y - 1, 1), 6, 3, GetUnitSymbol(UNIT_ALTITUDE, true), 0x65);
+            #ifdef CAR_MODE
+              DrawLabelBox(LAYOUT_ALT_X - 1, vma(LAYOUT_ALT_Y - 1, 1), 6, 3, GetUnitSymbol(UNIT_ALTITUDE, true), 0x65);
+            #endif
           } else {
             DrawBox(vma(LAYOUT_SPEED_X - 1, -1), vma(LAYOUT_SPEED_Y - 1, 1), 6,3);
-            DrawBox(LAYOUT_ALT_X - 1, vma(LAYOUT_ALT_Y - 1, 1), 6, 3);
+            #ifdef CAR_MODE
+              DrawBox(LAYOUT_ALT_X - 1, vma(LAYOUT_ALT_Y - 1, 1), 6, 3);
+            #endif
           }
         }
         
@@ -404,16 +408,20 @@ void UpdateDisplay() {
         DrawFourDigitValue(vma(LAYOUT_SPEED_X, -1), vma(LAYOUT_SPEED_Y, 1), fabs(gpsdata.Groundspeed * UNIT_SPEED), NO_SYMBOL, NO_SYMBOL, FONT_LARGE);
 
         // calculate and draw altitude
-        float alt = gpsdata.Altitude;
-        if(GPS_ALTITUDE_TYPE == 0) {
-          alt = gpsdata.Altitude - runtime.gpsasl;
-          if(alt < 0 && alt > GPS_AGL_NEGATIVE) alt = 0;
-        }
-     
-        DrawFourDigitValue(LAYOUT_ALT_X, vma(LAYOUT_ALT_Y, 1), fabs(alt * UNIT_ALTITUDE), NO_SYMBOL, NO_SYMBOL, FONT_LARGE);
+        #ifdef CAR_MODE
+          float alt = gpsdata.Altitude;
+          if(GPS_ALTITUDE_TYPE == 0) {
+            alt = gpsdata.Altitude - runtime.gpsasl;
+            if(alt < 0 && alt > GPS_AGL_NEGATIVE) alt = 0;
+          }
+       
+          DrawFourDigitValue(LAYOUT_ALT_X, vma(LAYOUT_ALT_Y, 1), fabs(alt * UNIT_ALTITUDE), NO_SYMBOL, NO_SYMBOL, FONT_LARGE);
+        #endif
         
         // draw vertical indicator
-        DrawStatus(LAYOUT_CLIMB_X, vma(LAYOUT_CLIMB_Y, 1), true, runtime.gpsclimb);
+        #ifdef CAR_MODE
+          DrawStatus(LAYOUT_CLIMB_X, vma(LAYOUT_CLIMB_Y, 1), true, runtime.gpsclimb);
+        #endif
         
         // draw home arrow
         DrawFancyHeading(vma(LAYOUT_HOMEBEARING_X, -1), LAYOUT_HOMEBEARING_Y, runtime.gpshomedirection);
