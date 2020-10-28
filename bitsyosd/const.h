@@ -96,6 +96,12 @@
 #define LAYOUT_SPEED_X        3
 #define LAYOUT_SPEED_Y        6
 
+#define LAYOUT_MAX_SPEED_X    3
+#define LAYOUT_MAX_SPEED_Y    4
+
+#define LAYOUT_LAP_MAX_SPEED_X 3
+#define LAYOUT_LAP_MAX_SPEED_Y 8
+
 #define LAYOUT_ALT_X          23 
 #define LAYOUT_ALT_Y          6
 
@@ -104,6 +110,9 @@
 
 #define LAYOUT_GPS_X          26
 #define LAYOUT_GPS_Y          1
+
+#define LAYOUT_LAPS_X         26
+#define LAYOUT_LAPS_Y         2
 
 #define LAYOUT_WARN_X         14
 #define LAYOUT_WARN_Y         1
@@ -125,6 +134,9 @@
 
 #define LAYOUT_FLYTIME_X      22
 #define LAYOUT_FLYTIME_Y      11
+
+#define LAYOUT_LAPTIME_X      2
+#define LAYOUT_LAPTIME_Y      12
 
 #define LAYOUT_HOMEDISTANCE_X 22
 #define LAYOUT_HOMEDISTANCE_Y 9
@@ -176,7 +188,7 @@
 #define VOLTAGE_PIN_BATTERY1 A2
 #define VOLTAGE_PIN_BATTERY2 A0
 #define CURRENT_PIN A1
-#define RSSI_PIN A3 
+#define RSSI_PIN A3
 
 /** 
  * (Development)
@@ -209,6 +221,17 @@ struct OSD_RUNTIME_VALUES {
   uint8_t gpsaltcount;
   boolean gpsacquired;
   long gpstimeout;
+
+  //RC_CAR
+  float max_Groundspeed;
+  float lap_max_Groundspeed;
+  uint8_t laps;
+  unsigned long start_time;
+  long best_laptime;
+
+  //433
+  boolean rf433error;
+  boolean rf433warn;
   
   // LED
   bool ledstatus;
@@ -235,6 +258,3 @@ struct OSD_RUNTIME_VALUES {
 
 
 #endif /* _CONST_ */
-
-
-

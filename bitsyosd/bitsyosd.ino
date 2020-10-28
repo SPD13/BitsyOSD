@@ -70,6 +70,13 @@ along with this program. If not, see <http://www.gnu.org/licenses/>
 #include "osd.h"
 #include "gps.h"
 
+#ifdef ENABLE_433
+  #include <RH_ASK.h>
+  #include <SPI.h>
+  #include "rf433.h"
+
+  RH_ASK driver(2000, CURRENT_PIN, 11, 5);
+#endif
 
 
 /**
@@ -83,6 +90,7 @@ OSD osd;
 // Runtime
 static struct OSD_RUNTIME_VALUES runtime;
 static struct GPS_DATA gpsdata;    // Global object that stores the gpsdata
+static struct RF433_DATA rf433data; //Global object that stores de RF 433 data
 
 /** 
   * (Setup)
@@ -111,7 +119,20 @@ void setup() {
     runtime.osdredraw = true; 
     runtime.distance = 0;
     runtime.tdistance = 0;
-    
+    runtime.rf433error = false;
+    runtime.rf433warn = false;
+    runtime.laps = 0;
+    runtime.max_Groundspeed = 0;
+    runtime.lap_max_Groundspeed = 0;
+    runtime.start_time = millis();
+    runtime.best_laptime = 0;
+
+        //Start 433
+#ifdef ENABLE_433
+    if (!driver.init())
+         runtime.rf433error = true;
+#endif
+
     // pre boot delay
     delay(500);
 
@@ -147,6 +168,9 @@ void Update() {
 
   // Update the GPS Information
   UpdateGPS();
+
+  //Update RF433 info
+  Update433();
   
   // Update Values
   UpdateValues();
@@ -265,7 +289,52 @@ void UpdateGPS() {
       }
       runtime.flytimelast = millis();
     }
+    //RC Car max speed
+    #ifdef CAR_MODE
+      if (gpsdata.Groundspeed > runtime.max_Groundspeed) {
+        runtime.max_Groundspeed = gpsdata.Groundspeed;
+      }
+      if (gpsdata.Groundspeed > runtime.lap_max_Groundspeed) {
+        runtime.lap_max_Groundspeed = gpsdata.Groundspeed;
+      }
+    #endif
   #endif
+}
+
+/**
+  * (Update433) Updates the 433 Data
+  */
+
+void Update433() {
+#ifdef ENABLE_433
+    // process data
+    if(!rf433_process()) {
+      return; // nothing yet 
+    }
+    
+    // update values
+    RF433_DATA tempdata = rf433_values();
+    
+    if(tempdata.Status) {
+      rf433data = tempdata;
+      if (rf433data.command == 1) { // Reset ALL values
+        runtime.max_Groundspeed = 0;
+        runtime.lap_max_Groundspeed = 0;
+        runtime.laps = 0;
+        if (runtime.best_laptime < (millis()-runtime.start_time)) {
+          runtime.best_laptime = millis()-runtime.start_time;
+        }
+        runtime.start_time = millis();
+      } else if (rf433data.command == 2) { //New lap
+        runtime.laps++;
+        runtime.lap_max_Groundspeed = 0;
+        if (runtime.best_laptime < (millis()-runtime.start_time)) {
+          runtime.best_laptime = millis()-runtime.start_time;
+        }
+        runtime.start_time = millis();
+      }
+    }
+#endif
 }
 
 /** 
@@ -305,11 +374,16 @@ void UpdateValues() {
 void UpdateDisplay() {
   
   // Permanent OSD Display
-  DrawTimer(vma(LAYOUT_OSDTIME_X, -1), vma(LAYOUT_OSDTIME_Y, 3), millis(), NO_SYMBOL, true);
+  DrawTimer(vma(LAYOUT_OSDTIME_X, -1), vma(LAYOUT_OSDTIME_Y, 3), runtime.start_time-millis(), NO_SYMBOL, true);
   
   // Permanent GPS Display
   DrawStatus(LAYOUT_GPS_X, LAYOUT_GPS_Y, true, SYMBOL_GPS);
-  DrawOneSmallValue(LAYOUT_GPS_X + 1, LAYOUT_GPS_Y, gpsdata.Satellites > 9 ? 9 : gpsdata.Satellites); 
+  DrawOneSmallValue(LAYOUT_GPS_X + 1, LAYOUT_GPS_Y, gpsdata.Satellites > 9 ? 9 : gpsdata.Satellites);
+
+  #ifdef ENABLE_433
+    DrawStatus(LAYOUT_LAPS_X, LAYOUT_LAPS_Y, true, SYMBOL_FLAG);
+    DrawOneSmallValue(LAYOUT_LAPS_X + 1, LAYOUT_LAPS_Y, runtime.laps);
+  #endif
 
   // Permanent Voltage Display
   #ifdef SHOW_VOLTAGE 
@@ -387,12 +461,12 @@ void UpdateDisplay() {
           // draw boxes for display
           if(SHOW_LABELS) {
             DrawLabelBox(vma(LAYOUT_SPEED_X - 1, -1), vma(LAYOUT_SPEED_Y - 1, 1), 6, 3, 0x60, GetUnitSpeedSymbol(UNIT_SPEED, true));
-            #ifdef CAR_MODE
+            #ifndef CAR_MODE
               DrawLabelBox(LAYOUT_ALT_X - 1, vma(LAYOUT_ALT_Y - 1, 1), 6, 3, GetUnitSymbol(UNIT_ALTITUDE, true), 0x65);
             #endif
           } else {
             DrawBox(vma(LAYOUT_SPEED_X - 1, -1), vma(LAYOUT_SPEED_Y - 1, 1), 6,3);
-            #ifdef CAR_MODE
+            #ifndef CAR_MODE
               DrawBox(LAYOUT_ALT_X - 1, vma(LAYOUT_ALT_Y - 1, 1), 6, 3);
             #endif
           }
@@ -406,6 +480,13 @@ void UpdateDisplay() {
         
         // draw speed
         DrawFourDigitValue(vma(LAYOUT_SPEED_X, -1), vma(LAYOUT_SPEED_Y, 1), fabs(gpsdata.Groundspeed * UNIT_SPEED), NO_SYMBOL, NO_SYMBOL, FONT_LARGE);
+
+        #ifdef CAR_MODE
+          //Draw Max Speed
+          DrawFourDigitValue(vma(LAYOUT_MAX_SPEED_X, -1), vma(LAYOUT_MAX_SPEED_Y, 1), fabs(runtime.max_Groundspeed * UNIT_SPEED), NO_SYMBOL, NO_SYMBOL, FONT_LARGE);
+          //Draw Lap Max Speed
+          DrawFourDigitValue(vma(LAYOUT_LAP_MAX_SPEED_X, -1), vma(LAYOUT_LAP_MAX_SPEED_Y, 1), fabs(runtime.lap_max_Groundspeed * UNIT_SPEED), NO_SYMBOL, NO_SYMBOL, FONT_LARGE);
+        #endif
 
         // calculate and draw altitude
         #ifdef CAR_MODE
@@ -431,9 +512,13 @@ void UpdateDisplay() {
 
         // draw total flight distance
         DrawDistance(LAYOUT_DISTANCE_X, vma(LAYOUT_DISTANCE_Y, 3), runtime.distance, SYMBOL_FLAG);
-        
-        // travel distance
-        DrawTimer(vma(LAYOUT_FLYTIME_X, -1), vma(LAYOUT_FLYTIME_Y, 3), runtime.flytime, SHOW_LABELS ? SYMBOL_TIMEFLY : NO_SYMBOL, false);
+        #ifndef CAR_MODE        
+          // travel distance
+          DrawTimer(vma(LAYOUT_FLYTIME_X, -1), vma(LAYOUT_FLYTIME_Y, 3), runtime.flytime, SHOW_LABELS ? SYMBOL_TIMEFLY : NO_SYMBOL, false);
+        #else
+          // Best Lap time
+          DrawTimer(vma(LAYOUT_LAPTIME_X, -1), vma(LAYOUT_LAPTIME_Y, 3), runtime.best_laptime, SYMBOL_FLAG, false);
+        #endif
       }
       
       
@@ -456,10 +541,27 @@ void UpdateDisplay() {
         
         // show message
         runtime.gpswarn = true;
-        MessageAlert(true, "NO GPS");
+        char* message = "NO GPS";
+        if (runtime.rf433error && !runtime.rf433warn) {
+          message = "NO GPS-NO 433";
+          runtime.rf433warn = true;
+        }
+        MessageAlert(true, message);
       }
     }
   #endif
+  #ifdef ENABLE_433
+    if(runtime.rf433error && !runtime.rf433warn) {
+        // clear screen
+        osd.clear();
+        
+        DrawLogo();
+        
+        // show message
+        runtime.rf433warn = true;
+        MessageAlert(true, "NO 433");
+      }
+   #endif
 }
 
 

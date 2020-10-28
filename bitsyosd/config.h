@@ -33,6 +33,15 @@ tweak to your likening.
 #define CAR_MODE
 
 /**
+  * Enable 433 Receiver
+  * 
+  *
+  */
+#define ENABLE_433
+#define RF433_PILOT_ID 1 //Pilot identifier if multiple pilots are sending messages at the same time
+
+
+/**
   * (Units) 
   * 
   * Pick and choose the units you like for the different parameters
