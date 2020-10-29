@@ -287,7 +287,6 @@ void DrawTimer(byte x, byte y, unsigned long time, byte symbol, boolean small) {
   osd.closePanel();
 }
 
-
 /** 
   * (DrawBox) Draws a box with simple elements
   */

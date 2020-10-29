@@ -126,6 +126,10 @@ void setup() {
     runtime.lap_max_Groundspeed = 0;
     runtime.start_time = millis();
     runtime.best_laptime = 0;
+    runtime.last_laptime = 0;
+    runtime.laptime_diff = 0;
+    runtime.laptime_symbol = 0;
+    runtime.has_lastlap = false;
 
         //Start 433
 #ifdef ENABLE_433
@@ -321,15 +325,26 @@ void Update433() {
         runtime.max_Groundspeed = 0;
         runtime.lap_max_Groundspeed = 0;
         runtime.laps = 0;
-        if (runtime.best_laptime < (millis()-runtime.start_time)) {
-          runtime.best_laptime = millis()-runtime.start_time;
-        }
+        runtime.best_laptime = 0;
         runtime.start_time = millis();
+        runtime.has_lastlap = false;
       } else if (rf433data.command == 2) { //New lap
         runtime.laps++;
         runtime.lap_max_Groundspeed = 0;
-        if (runtime.best_laptime < (millis()-runtime.start_time)) {
-          runtime.best_laptime = millis()-runtime.start_time;
+        int previous_laptime = runtime.last_laptime;
+        runtime.last_laptime = millis()-runtime.start_time;
+        if (runtime.best_laptime > runtime.last_laptime || !runtime.has_lastlap) {
+          runtime.best_laptime = runtime.last_laptime;
+          runtime.has_lastlap = true;
+        }
+        runtime.laptime_diff = abs(previous_laptime-runtime.last_laptime);
+        int sec_diff = round((previous_laptime-runtime.last_laptime)/1000)*1000;
+        if (sec_diff>0) {
+          runtime.laptime_symbol = 1;
+        } else if (sec_diff<0) {
+          runtime.laptime_symbol = 2;
+        } else {
+          runtime.laptime_symbol = 0;
         }
         runtime.start_time = millis();
       }
@@ -374,7 +389,24 @@ void UpdateValues() {
 void UpdateDisplay() {
   
   // Permanent OSD Display
-  DrawTimer(vma(LAYOUT_OSDTIME_X, -1), vma(LAYOUT_OSDTIME_Y, 3), runtime.start_time-millis(), NO_SYMBOL, true);
+  DrawTimer(vma(LAYOUT_OSDTIME_X, -1), vma(LAYOUT_OSDTIME_Y, 3), millis()-runtime.start_time, NO_SYMBOL, true);
+  #ifdef CAR_MODE
+  if (!runtime.has_lastlap) {
+      // Best Lap time
+      DrawTimer(vma(LAYOUT_BEST_LAPTIME_X, -1), vma(LAYOUT_BEST_LAPTIME_Y, 3), runtime.best_laptime, SYMBOL_HEARTBEAT, true);
+      // last lap time
+
+      DrawTimer(vma(LAYOUT_LAST_LAPTIME_X, -1), vma(LAYOUT_LAST_LAPTIME_Y, 3), runtime.last_laptime, SYMBOL_FLAG, true);
+        // last laptime diff
+      int symbol = SYMBOL_NOCLIMB;
+      if (runtime.laptime_symbol == 1) {
+        symbol = SYMBOL_CLIMBUP;
+      } else if (runtime.laptime_symbol == 2) {
+        symbol = SYMBOL_CLIMBDOWN;
+      }
+      DrawTimer(vma(LAYOUT_LAST_LAPTIME_DIFF_X, -1), vma(LAYOUT_LAST_LAPTIME_DIFF_Y, 3), runtime.laptime_diff, symbol, true);
+    }
+  #endif
   
   // Permanent GPS Display
   DrawStatus(LAYOUT_GPS_X, LAYOUT_GPS_Y, true, SYMBOL_GPS);
@@ -483,13 +515,13 @@ void UpdateDisplay() {
 
         #ifdef CAR_MODE
           //Draw Max Speed
-          DrawFourDigitValue(vma(LAYOUT_MAX_SPEED_X, -1), vma(LAYOUT_MAX_SPEED_Y, 1), fabs(runtime.max_Groundspeed * UNIT_SPEED), NO_SYMBOL, NO_SYMBOL, FONT_LARGE);
+          DrawThreeDigitValue(vma(LAYOUT_MAX_SPEED_X, -1), vma(LAYOUT_MAX_SPEED_Y, 1), fabs(runtime.max_Groundspeed * UNIT_SPEED), SYMBOL_CLIMBUP);
           //Draw Lap Max Speed
-          DrawFourDigitValue(vma(LAYOUT_LAP_MAX_SPEED_X, -1), vma(LAYOUT_LAP_MAX_SPEED_Y, 1), fabs(runtime.lap_max_Groundspeed * UNIT_SPEED), NO_SYMBOL, NO_SYMBOL, FONT_LARGE);
+          //DrawThreeDigitValue(vma(LAYOUT_LAP_MAX_SPEED_X, -1), vma(LAYOUT_LAP_MAX_SPEED_Y, 1), fabs(runtime.lap_max_Groundspeed * UNIT_SPEED), NO_SYMBOL);
         #endif
 
         // calculate and draw altitude
-        #ifdef CAR_MODE
+        #ifndef CAR_MODE
           float alt = gpsdata.Altitude;
           if(GPS_ALTITUDE_TYPE == 0) {
             alt = gpsdata.Altitude - runtime.gpsasl;
@@ -500,7 +532,7 @@ void UpdateDisplay() {
         #endif
         
         // draw vertical indicator
-        #ifdef CAR_MODE
+        #ifndef CAR_MODE
           DrawStatus(LAYOUT_CLIMB_X, vma(LAYOUT_CLIMB_Y, 1), true, runtime.gpsclimb);
         #endif
         
@@ -508,16 +540,16 @@ void UpdateDisplay() {
         DrawFancyHeading(vma(LAYOUT_HOMEBEARING_X, -1), LAYOUT_HOMEBEARING_Y, runtime.gpshomedirection);
 
         // draw home distance
-        DrawDistance(LAYOUT_HOMEDISTANCE_X, vma(LAYOUT_HOMEDISTANCE_Y, 3), runtime.gpshomedistance, SYMBOL_HOME);
+        #ifndef CAR_MODE
+          DrawDistance(LAYOUT_HOMEDISTANCE_X, vma(LAYOUT_HOMEDISTANCE_Y, 3), runtime.gpshomedistance, SYMBOL_HOME);
+        #endif
 
         // draw total flight distance
         DrawDistance(LAYOUT_DISTANCE_X, vma(LAYOUT_DISTANCE_Y, 3), runtime.distance, SYMBOL_FLAG);
+        
         #ifndef CAR_MODE        
           // travel distance
           DrawTimer(vma(LAYOUT_FLYTIME_X, -1), vma(LAYOUT_FLYTIME_Y, 3), runtime.flytime, SHOW_LABELS ? SYMBOL_TIMEFLY : NO_SYMBOL, false);
-        #else
-          // Best Lap time
-          DrawTimer(vma(LAYOUT_LAPTIME_X, -1), vma(LAYOUT_LAPTIME_Y, 3), runtime.best_laptime, SYMBOL_FLAG, false);
         #endif
       }
       

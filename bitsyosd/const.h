@@ -96,11 +96,11 @@
 #define LAYOUT_SPEED_X        3
 #define LAYOUT_SPEED_Y        6
 
-#define LAYOUT_MAX_SPEED_X    3
-#define LAYOUT_MAX_SPEED_Y    4
+#define LAYOUT_MAX_SPEED_X    23
+#define LAYOUT_MAX_SPEED_Y    6
 
-#define LAYOUT_LAP_MAX_SPEED_X 3
-#define LAYOUT_LAP_MAX_SPEED_Y 8
+#define LAYOUT_LAP_MAX_SPEED_X 23
+#define LAYOUT_LAP_MAX_SPEED_Y 7
 
 #define LAYOUT_ALT_X          23 
 #define LAYOUT_ALT_Y          6
@@ -130,19 +130,25 @@
 #define LAYOUT_HOMEBEARING_Y  2
 
 #define LAYOUT_OSDTIME_X      2
-#define LAYOUT_OSDTIME_Y      11
+#define LAYOUT_OSDTIME_Y      10
 
 #define LAYOUT_FLYTIME_X      22
 #define LAYOUT_FLYTIME_Y      11
 
-#define LAYOUT_LAPTIME_X      2
-#define LAYOUT_LAPTIME_Y      12
+#define LAYOUT_BEST_LAPTIME_X  2
+#define LAYOUT_BEST_LAPTIME_Y  11
+
+#define LAYOUT_LAST_LAPTIME_X  2
+#define LAYOUT_LAST_LAPTIME_Y  12
+
+#define LAYOUT_LAST_LAPTIME_DIFF_X  9
+#define LAYOUT_LAST_LAPTIME_DIFF_Y  12
 
 #define LAYOUT_HOMEDISTANCE_X 22
-#define LAYOUT_HOMEDISTANCE_Y 9
+#define LAYOUT_HOMEDISTANCE_Y 10
 
 #define LAYOUT_DISTANCE_X     22
-#define LAYOUT_DISTANCE_Y     10
+#define LAYOUT_DISTANCE_Y     11
 
 #define LAYOUT_GPSCOORD_X     2
 #define LAYOUT_GPSCOORD_Y     9
@@ -228,6 +234,10 @@ struct OSD_RUNTIME_VALUES {
   uint8_t laps;
   unsigned long start_time;
   long best_laptime;
+  long last_laptime;
+  long laptime_diff;
+  int laptime_symbol;
+  bool has_lastlap;
 
   //433
   boolean rf433error;

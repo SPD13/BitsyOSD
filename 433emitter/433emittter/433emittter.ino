@@ -2,6 +2,7 @@
 #include <SPI.h>
 
 //Configuration
+#define SIMULATE //Only enable when in simulation mode: sends a new lap every 5s
 #define PILOT_ID 1
 #define TX_PIN 11
 #define BURST_NUM 10 //Number of burst to send
@@ -37,6 +38,11 @@ void setup() {
 void loop() {
   checkButton1State(0, BUTTON1_PIN, BUTTON1_RF_COMMAND, 0);
   checkButton1State(1, BUTTON2_PIN, BUTTON2_RF_COMMAND, 0);
+
+  #ifdef SIMULATE
+    send_rf_message(2, 0);
+    delay(5000);
+  #endif
 }
 
 void checkButton1State(int button_id, int buttton_pin, uint8_t rf_command, uint8_t rf_parameter) {
