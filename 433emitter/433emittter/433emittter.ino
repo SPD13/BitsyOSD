@@ -2,17 +2,18 @@
 #include <SPI.h>
 
 //Configuration
-#define SIMULATE //Only enable when in simulation mode: sends a new lap every 5s
+//#define SIMULATE //Only enable when in simulation mode: sends a new lap every 5s
 #define PILOT_ID 1
 #define TX_PIN 11
 #define BURST_NUM 10 //Number of burst to send
-#define BUTTON1_PIN 3
+#define BUTTON1_PIN 2
 #define BUTTON1_RF_COMMAND 1
-#define BUTTON2_PIN 4
+#define BUTTON2_PIN 3
 #define BUTTON2_RF_COMMAND 2
 #define LED1_PIN 5
 #define LED2_PIN 6
-#define BUTTON_DEBOUNCE_DELAY 50 //delay in MS to debounce button press
+#define BUZZER_PIN 8
+#define BUTTON_DEBOUNCE_DELAY 100 //delay in MS to debounce button press
 
 RH_ASK driver(2000, 2, TX_PIN, 5); //Not receiving, just transmitting
 
@@ -28,14 +29,15 @@ void setup() {
   pinMode(LED2_PIN, OUTPUT);
   pinMode(BUTTON1_PIN, INPUT);
   pinMode(BUTTON2_PIN, INPUT);
+  pinMode(BUZZER_PIN, OUTPUT);
   Serial.begin(9600); // Debugging only
   if (!driver.init())
       Serial.println("init failed");
-  //Led 1 always ON
   digitalWrite(LED1_PIN, HIGH);
 }
 
 void loop() {
+  digitalWrite(LED1_PIN, HIGH);
   checkButton1State(0, BUTTON1_PIN, BUTTON1_RF_COMMAND, 0);
   checkButton1State(1, BUTTON2_PIN, BUTTON2_RF_COMMAND, 0);
 
@@ -69,7 +71,10 @@ void checkButton1State(int button_id, int buttton_pin, uint8_t rf_command, uint8
 
       // only toggle the buttton if the new button state is HIGH
       if (buttonState[button_id] == HIGH) {
-        send_rf_message(rf_command, rf_parameter);
+          Serial.print("BUTTON ");
+          Serial.print(button_id+1);
+          Serial.println(" pressed");
+        send_rf_message(button_id, rf_command, rf_parameter);
       }
     }
   }
@@ -78,10 +83,10 @@ void checkButton1State(int button_id, int buttton_pin, uint8_t rf_command, uint8
   lastButtonState[button_id] = reading;
 }
 
-void send_rf_message(uint8_t rf_command, uint8_t rf_parameter) {
+void send_rf_message(int button_id, uint8_t rf_command, uint8_t rf_parameter) {
     //Light leds
   digitalWrite(LED_BUILTIN, HIGH);
-  digitalWrite(LED1_PIN, HIGH);
+  digitalWrite(LED2_PIN, HIGH);
   seq_id = seq_id + 1;
   for (int i=0; i<BURST_NUM; i++) {
     uint8_t buf[4];
@@ -93,6 +98,18 @@ void send_rf_message(uint8_t rf_command, uint8_t rf_parameter) {
     driver.waitPacketSent();
   }
   //Stop leds
+  Serial.print("Command ");
+  Serial.print(rf_command);
+  Serial.println(" sent");
   digitalWrite(LED_BUILTIN, LOW);
-  digitalWrite(LED1_PIN, LOW);
+  digitalWrite(LED2_PIN, LOW);
+  digitalWrite(LED1_PIN, HIGH);
+  //Sound confirmation
+  if (button_id == 0) {
+    tone(BUZZER_PIN, 1000);
+  }else if (button_id == 1) {
+    tone(BUZZER_PIN, 500);
+  }
+  delay(1000);
+  noTone(BUZZER_PIN);
 }
