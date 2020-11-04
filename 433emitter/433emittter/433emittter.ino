@@ -1,5 +1,6 @@
 #include <RH_ASK.h>
 #include <SPI.h>
+#include <avr/sleep.h>
 
 //Configuration
 //#define SIMULATE //Only enable when in simulation mode: sends a new lap every 5s
@@ -12,11 +13,13 @@
 #define BUTTON2_RF_COMMAND 2
 #define LED1_PIN 5
 #define LED2_PIN 6
+//#define ENABLE_BUZZER
 #define BUZZER_PIN 8
 #define BATTERY_PIN A1
 #define BATTERY_WARN_VOLT 3.4 //Warning voltage for battery
 #define BATTERY_CHECK_TIME_S 10 //Check battery voltage every X s
 #define BUTTON_DEBOUNCE_DELAY 100 //delay in MS to debounce button press
+//#define ENABLE_DEEP_SLEEP //If active device will sleep and wakeup on button press. Only works if butttons are on pin 2 and 3
 
 RH_ASK driver(2000, 2, TX_PIN, 5); //Not receiving, just transmitting
 
@@ -50,6 +53,27 @@ void loop() {
     send_rf_message(2, 0);
     delay(5000);
   #endif
+  #ifdef ENABLE_DEEP_SLEEP
+    enable_sleep();
+  #endif
+}
+
+void enable_sleep() {
+    //Sleep interrupts
+  Serial.println("Going to sleep");
+  sleep_enable();
+  attachInterrupt(0, wake_up, LOW);
+  attachInterrupt(1, wake_up, LOW);
+  set_sleep_mode(SLEEP_MODE_PWR_DOWN);
+  sleep_cpu();
+  Serial.println("Woke up");
+}
+
+void wake_up() {
+  Serial.println("Interrupt fired. Disable sleep");
+  sleep_disable();
+  detachInterrupt(0);
+  detachInterrupt(1);
 }
 
 void checkBattery() {
@@ -131,12 +155,14 @@ void send_rf_message(int button_id, uint8_t rf_command, uint8_t rf_parameter) {
   digitalWrite(LED_BUILTIN, LOW);
   digitalWrite(LED2_PIN, LOW);
   digitalWrite(LED1_PIN, HIGH);
-  //Sound confirmation
-  if (button_id == 0) {
-    tone(BUZZER_PIN, 1000);
-  }else if (button_id == 1) {
-    tone(BUZZER_PIN, 500);
-  }
-  delay(1000);
-  noTone(BUZZER_PIN);
+  #ifdef ENABLE_BUZZER
+    //Sound confirmation
+    if (button_id == 0) {
+      tone(BUZZER_PIN, 1000);
+    }else if (button_id == 1) {
+      tone(BUZZER_PIN, 500);
+    }
+    delay(1000);
+    noTone(BUZZER_PIN);
+  #endif
 }

@@ -391,7 +391,7 @@ void UpdateDisplay() {
   // Permanent OSD Display
   DrawTimer(vma(LAYOUT_OSDTIME_X, -1), vma(LAYOUT_OSDTIME_Y, 3), millis()-runtime.start_time, NO_SYMBOL, true);
   #ifdef CAR_MODE
-  if (!runtime.has_lastlap) {
+  if (runtime.has_lastlap) {
       // Best Lap time
       DrawTimer(vma(LAYOUT_BEST_LAPTIME_X, -1), vma(LAYOUT_BEST_LAPTIME_Y, 3), runtime.best_laptime, SYMBOL_HEARTBEAT, true);
       // last lap time
