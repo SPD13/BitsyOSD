@@ -114,7 +114,10 @@ tweak to your likening.
   */
 
 // UBLOX 6M 
-#define GPS_SPEED 9600
+//#define GPS_SPEED 9600
+
+// custom
+#define GPS_SPEED 115200
 
 // DJI
 //#define GPS_SPEED 115200
