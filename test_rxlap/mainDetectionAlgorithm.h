@@ -30,8 +30,11 @@ void runLapDetectionAlgorithm() {
                             }
                             newLapIndex++;
                             lastLapsNotSent++;
-                            Serial.println("New Lap");
                         }
+                        Serial.println("New Lap");
+                        #ifdef ENABLE_RF
+                          send_rf_message(RF_NEWLAP_COMMANDID, RF_NEWLAP_PARAMETER);
+                        #endif
                         lastMilliseconds = now;
                         playLapTones(); // during the race play tone sequence even if no more laps can be logged
                     }

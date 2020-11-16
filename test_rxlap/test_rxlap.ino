@@ -1,4 +1,12 @@
+#include <RH_ASK.h>
+#include <SPI.h>
+
 //#define BAUDRATE 115200
+#define PILOT_ID 1 //Pilot ID for this module
+#define ENABLE_RF //Enable RF transmission
+#define BURST_NUM 10 //Number of burst to send in RF
+#define RF_NEWLAP_COMMANDID 2
+#define RF_NEWLAP_PARAMETER 1
 
 // number of analog rssi reads to average for the current check.
 // single analog read with FASTADC defined (see below) takes ~20us on 16MHz arduino
@@ -72,7 +80,7 @@ uint32_t now = 0;
 uint32_t raceStartTime = 0;
 #define MIN_MIN_LAP_TIME 1 //seconds
 #define MAX_MIN_LAP_TIME 120 //seconds
-uint8_t minLapTime = 1; //seconds
+uint8_t minLapTime = 10; //seconds
 #define MAX_LAPS 100
 uint32_t lapTimes[MAX_LAPS];
 
@@ -106,14 +114,25 @@ uint16_t frequency = 0;
 uint32_t millisUponRequest = 0;
 uint8_t isModuleActive = 1; // 0 means this module is inactive and the VRX is disabled
 
+int seq_id = 1; //RF Sequence ID
+
 #include "fastReadWrite.h"
 #include "fastADC.h"
 #include "pinAssignments.h"
+//------- RF Module ----------
+RH_ASK driver(2000, 11, rfTxPin, 5); //Not receiving, just transmitting
+#include "RF433.h"
 #include "channels.h"
 #include "rx5808spi.h"
 #include "sounds.h"
 #include "lapDetectionRoutines.h"
 #include "mainDetectionAlgorithm.h"
+
+//------- DEBUG ----------
+//#define ENABLE_DEBUG
+#define DEBUG_CYCLES 4000
+int debug_cycle = DEBUG_CYCLES;
+
 
 // ----------------------------------------------------------------------------
 void setModuleActive(uint8_t active) {
@@ -251,6 +270,17 @@ void setupThreshold(uint8_t phase) {
                 accumulatedShiftedRssi = rssiHigh * ACCUMULATION_TIME_CONSTANT;
                 playThresholdSetupMiddleTones();
                 Serial.println("Setup threshold Middle");
+            } else {
+              #ifdef ENABLE_DEBUG
+                debug_cycle--;
+                if (debug_cycle<=0) {
+                  debug_cycle = DEBUG_CYCLES;
+                  Serial.print("MIDDLE Threshold Debug - testing: ");
+                  Serial.print(accumulatedRssi);
+                  Serial.print(">");
+                  Serial.println(rssiHighEnoughForMonitoring);
+                }
+              #endif
             }
         } else {
             // in this phase of the setup we are tracking highest rssi and expect it to fall back down so that we know that the process is complete
@@ -278,6 +308,17 @@ void setupThreshold(uint8_t phase) {
                 playThresholdSetupDoneTones();
                 Serial.println("Setup threshold DONE");
                 raceMode = 1;
+            } else {
+              #ifdef ENABLE_DEBUG
+                debug_cycle--;
+                if (debug_cycle<=0) {
+                  debug_cycle = DEBUG_CYCLES;
+                  Serial.print("FINAL Threshold Debug - testing: ");
+                  Serial.print(accumulatedRssi);
+                  Serial.print("<");
+                  Serial.println(rssiLowEnoughForSetup);
+                }
+              #endif
             }
         }
     }
@@ -297,13 +338,24 @@ void setThresholdValue(uint16_t threshold) {
     }
 }
 
+
+
 void setup() {
       // initialize led pin as output.
     pinMode(ledPin, OUTPUT);
     digitalHigh(ledPin);
+    pinMode(led1Pin, OUTPUT);
+    digitalHigh(led1Pin);
 
     // init buzzer pin
     pinMode(buzzerPin, OUTPUT);
+
+    //init button
+    pinMode(buttonPin, INPUT);
+
+    //Init RF
+    if (!driver.init())
+      Serial.println("RF init failed");
 
     //init raspberrypi interrupt generator pin
     pinMode(pinRaspiInt, OUTPUT);
@@ -322,15 +374,22 @@ void setup() {
     // Setup Done - Turn Status ledPin off.
     digitalLow(ledPin);
 
-  Serial.begin(9600);
-  Serial.println("Started");
-  Serial.print("Frequency: ");
-  Serial.println(frequency);
-  thresholdSetupMode = 1;
-  setupThreshold(RSSI_SETUP_INITIALIZE);
+    Serial.begin(9600);
+    Serial.println("Started");
+    Serial.print("Frequency: ");
+    Serial.println(frequency);
 }
 
 void loop() {
+    // read the state of the pushbutton value:
+  int buttonState = digitalRead(buttonPin);
+
+  // check if the pushbutton is pressed. If it is, the buttonState is HIGH:
+  if (buttonState == HIGH && thresholdSetupMode == 0) {
+    thresholdSetupMode = 1;
+    setupThreshold(RSSI_SETUP_INITIALIZE);
+  }
+  
   rssi = getFilteredRSSI();
       if (!raceMode) { // no need to get rssiForThresholdSetup during race time because it's used only in threshold setting, which is already set by the race time
         rssiForThresholdSetup = getRssiForAutomaticThresholdSetup(); // filter RSSI

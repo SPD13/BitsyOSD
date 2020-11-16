@@ -106,6 +106,23 @@ void DrawFourDigitValue(byte x, byte y, long v, byte bsymbol, byte asymbol, int 
   osd.closePanel();    
 }
 
+void DrawFloatValue(byte x, byte y, float v, byte bsymbol, byte asymbol, int fl) {
+  // verify
+  if(v < 0 || v > 99) return;
+  
+
+  osd.setPanel(x, y);    
+  osd.openPanel(); 
+  
+  // write symbol
+  if(bsymbol != NO_SYMBOL) osd.write(bsymbol); 
+  osd.writefloat(v, 1);
+
+  // write symbol
+  if(asymbol != NO_SYMBOL) osd.write(asymbol);  
+  osd.closePanel();    
+}
+
 
 /**
   * (GetUnitSymbol)
