@@ -240,8 +240,8 @@ tweak to your likening.
   * 2 = Toggle (every 5s) ** NOT IMPLEMENTED YET **
   */
 
-#define DISPLAY_MODE_BATTERY1 1
-#define DISPLAY_MODE_BATTERY2 1
+#define DISPLAY_MODE_BATTERY1 0
+#define DISPLAY_MODE_BATTERY2 0
 
 
 /**
@@ -256,8 +256,8 @@ tweak to your likening.
   * 4 Cell = 9
   */
 
-#define VOLTAGE_DIVIDER_BATTERY1 10.75
-#define VOLTAGE_DIVIDER_BATTERY2 10.75
+#define VOLTAGE_DIVIDER_BATTERY1 11.0
+#define VOLTAGE_DIVIDER_BATTERY2 10.0
 
 
 /**

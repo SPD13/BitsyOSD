@@ -116,8 +116,19 @@ void DrawFloatValue(byte x, byte y, float v, byte bsymbol, byte asymbol, int fl)
   
   // write symbol
   if(bsymbol != NO_SYMBOL) osd.write(bsymbol); 
-  osd.writefloat(v, 1);
+  
+  //osd.writefloat(v, 1);
 
+  // write numbers
+  int d1 = round(v/10);
+  int d2 = round(v-d1*10);
+  int f1 = round((v-round(v))*10.0);
+  //osd.write(fl+d1);
+  //osd.write(fl+d2);
+  //osd.write(0x4A);//Dot
+  //osd.write(fl+f1);
+  osd.writefloat(v,1);
+  
   // write symbol
   if(asymbol != NO_SYMBOL) osd.write(asymbol);  
   osd.closePanel();    
@@ -197,6 +208,16 @@ void DrawOneSmallValue(byte x, byte y, int n) {
   osd.setPanel(x, y);    
   osd.openPanel();
   osd.write(fs+n);
+  osd.closePanel();  
+}
+
+/* (DrawOneSmallValue2Digits) Draws a one value */
+void DrawOneSmallValue2Digits(byte x, byte y, int n) {
+  int fs = FONT_SMALL;
+  osd.setPanel(x, y);    
+  osd.openPanel();
+  osd.write(fs+(n/10));
+  osd.write(fs+(n%10));
   osd.closePanel();  
 }
 

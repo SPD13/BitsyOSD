@@ -23,6 +23,15 @@ void unplugSlaves() {
  * (ReadVoltage)
  */
 
+float ReadVoltage2(int pin, float divider) {
+
+  // read the input on analog pin 0:
+  int voltageRaw = analogRead(pin);
+  // Convert the analog reading (which goes from 0 - 1023) to a voltage (0 - divider):
+  float voltage = voltageRaw * (divider / 1023.0);
+  return voltage;
+}
+
 float ReadVoltage(int pin, int divider) {
 
   static uint16_t i = 0;

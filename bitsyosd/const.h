@@ -86,6 +86,10 @@
 #define SYMBOL_RSSI          0x86
 #define SYMBOL_PERCSMALL     0x92
 #define SYMBOL_PERCLARGE     0x4c
+//CAR
+#define SYMBOL_MAX           0x84
+#define SYMBOL_MIN           0x85
+
 
 /**
  * (Layout) 

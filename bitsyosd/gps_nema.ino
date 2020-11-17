@@ -25,7 +25,7 @@ static struct GPS_DATA GPSValues;
   
 boolean gps_process(void) {
   // read serial
-  
+  int ret = false;
   while (Serial.available()) {
     // process frame
     if(NEMA_parse(Serial.read())) { 
@@ -44,11 +44,11 @@ boolean gps_process(void) {
       GPSValues.Climbrate = 0;
 
       // return 
-      return true;
+      ret = true;
     }
   }
 
-  return false;
+  return ret;
 }
 
 
@@ -256,7 +256,7 @@ bool NEMA_parse(char c) {
 
 
         /**
-          * GPGSA_FRAME
+          * GPGRMC_FRAME
           */
 
         case GPRMC_FRAME:

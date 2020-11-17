@@ -412,9 +412,9 @@ void UpdateDisplay() {
   DrawStatus(LAYOUT_GPS_X, LAYOUT_GPS_Y, true, SYMBOL_GPS);
   DrawOneSmallValue(LAYOUT_GPS_X + 1, LAYOUT_GPS_Y, gpsdata.Satellites > 9 ? 9 : gpsdata.Satellites);
 
-  #ifdef ENABLE_433
+  #ifdef CAR_MODE
     DrawStatus(LAYOUT_LAPS_X, LAYOUT_LAPS_Y, true, SYMBOL_FLAG);
-    DrawOneSmallValue(LAYOUT_LAPS_X + 1, LAYOUT_LAPS_Y, runtime.laps);
+    DrawOneSmallValue2Digits(LAYOUT_LAPS_X + 1, LAYOUT_LAPS_Y, runtime.laps);
   #endif
 
   // Permanent Voltage Display
@@ -511,13 +511,20 @@ void UpdateDisplay() {
         }
         
         // draw speed
-        DrawFourDigitValue(vma(LAYOUT_SPEED_X, -1), vma(LAYOUT_SPEED_Y, 1), fabs(gpsdata.Groundspeed * UNIT_SPEED), NO_SYMBOL, NO_SYMBOL, FONT_LARGE);
+        #ifdef CAR_MODE
+          //Float speed
+          //DrawFloatValue(vma(LAYOUT_SPEED_X, -1), vma(LAYOUT_SPEED_Y, 1), fabs(gpsdata.Groundspeed * UNIT_SPEED), NO_SYMBOL, NO_SYMBOL, FONT_LARGE);
+          DrawFourDigitValue(vma(LAYOUT_SPEED_X, -1), vma(LAYOUT_SPEED_Y, 1), fabs(gpsdata.Groundspeed * UNIT_SPEED), NO_SYMBOL, NO_SYMBOL, FONT_LARGE);
+        #else
+          DrawFourDigitValue(vma(LAYOUT_SPEED_X, -1), vma(LAYOUT_SPEED_Y, 1), fabs(gpsdata.Groundspeed * UNIT_SPEED), NO_SYMBOL, NO_SYMBOL, FONT_LARGE);
+        #endif
 
         #ifdef CAR_MODE
           //Draw Max Speed
-          DrawThreeDigitValue(vma(LAYOUT_MAX_SPEED_X, -1), vma(LAYOUT_MAX_SPEED_Y, 1), fabs(runtime.max_Groundspeed * UNIT_SPEED), SYMBOL_CLIMBUP);
+          //DrawFloatValue(vma(LAYOUT_MAX_SPEED_X, -1), vma(LAYOUT_MAX_SPEED_Y, 1), fabs(runtime.max_Groundspeed * UNIT_SPEED), NO_SYMBOL, SYMBOL_MAX, FONT_LARGE);
+          DrawFourDigitValue(vma(LAYOUT_MAX_SPEED_X, -1), vma(LAYOUT_MAX_SPEED_Y, 1), fabs(runtime.max_Groundspeed * UNIT_SPEED), NO_SYMBOL, SYMBOL_MAX, FONT_LARGE);
           //Draw Lap Max Speed
-          //DrawThreeDigitValue(vma(LAYOUT_LAP_MAX_SPEED_X, -1), vma(LAYOUT_LAP_MAX_SPEED_Y, 1), fabs(runtime.lap_max_Groundspeed * UNIT_SPEED), NO_SYMBOL);
+          //DrawFloatValue(vma(LAYOUT_LAP_MAX_SPEED_X, -1), vma(LAYOUT_LAP_MAX_SPEED_Y, 1), fabs(runtime.lap_max_Groundspeed * UNIT_SPEED), NO_SYMBOL, SYMBOL_CLIMBUP, FONT_LARGE);
         #endif
 
         // calculate and draw altitude
